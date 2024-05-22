@@ -26,8 +26,8 @@ else
     exit 1
 fi
 
-matching_files=$(ls $filesdir -a -R -1 | wc -l)
-matching_lines=$(grep -r $searchstr * $1 | wc -l)
+matching_files=$(find $filesdir -type f | wc -l)
+matching_lines=$(grep -r $searchstr $filesdir | wc -l)
 
 echo "The number of files are $matching_files and the number of matching lines are $matching_lines"
 
