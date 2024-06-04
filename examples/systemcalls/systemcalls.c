@@ -1,5 +1,11 @@
 #include "systemcalls.h"
-
+#include <stdlib.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 /**
  * @param cmd the command to execute with system()
  * @return true if the command in @param cmd was executed
@@ -16,7 +22,11 @@ bool do_system(const char *cmd)
  *   and return a boolean true if the system() call completed with success
  *   or false() if it returned a failure
 */
-
+    int s;
+    s = system(cmd);
+    if (s== -1){
+        return false;
+    }
     return true;
 }
 
@@ -55,10 +65,26 @@ bool do_exec(int count, ...)
  *   and wait instead of system (see LSP page 161).
  *   Use the command[0] as the full path to the command to execute
  *   (first argument to execv), and use the remaining arguments
- *   as second argument to the execv() command.
+ *   as second argument to the
+ *   execv() command.
  *
 */
+    pid_t pid, wait_pid;
+    int status;
 
+    pid = fork();
+    if (pid==-1){
+        return false;
+    }
+
+    else {
+        execv(command[0], command);
+        exit (-1);
+    }
+    wait_pid = wait(&status);
+    if (wait_pid==0){
+        return true;
+    }
     va_end(args);
 
     return true;
@@ -84,6 +110,14 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
     // and may be removed
     command[count] = command[count];
 
+    pid_t pid;
+    int fd = open(outputfile, 0644);
+    if (fd==-1){perror("fork");}
+    pid = fork();
+    if (pid==-1){perror("fork");}
+
+    execv(command[0], command);
+    exit (-1);
 
 /*
  * TODO
