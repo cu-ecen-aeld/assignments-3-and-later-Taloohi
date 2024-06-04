@@ -69,25 +69,30 @@ bool do_exec(int count, ...)
  *   execv() command.
  *
 */
+    fflush(stdout);
     pid_t pid, wait_pid;
-    int status;
+    int status=0;
 
     pid = fork();
     if (pid==-1){
         return false;
     }
 
-    else {
+    else if (pid==0) {
         execv(command[0], command);
-        exit (-1);
+        exit (1);
     }
+
+    else{
+
     wait_pid = wait(&status);
     if (wait_pid==0){
         return true;
     }
+    }
     va_end(args);
 
-    return true;
+    return status==0;
 }
 
 /**
@@ -100,6 +105,7 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
     va_list args;
     va_start(args, count);
     char * command[count+1];
+    fflush(stdout);
     int i;
     for(i=0; i<count; i++)
     {
@@ -108,16 +114,31 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
     command[count] = NULL;
     // this line is to avoid a compile warning before your implementation is complete
     // and may be removed
-    command[count] = command[count];
 
     pid_t pid;
-    int fd = open(outputfile, 0644);
-    if (fd==-1){perror("fork");}
-    pid = fork();
-    if (pid==-1){perror("fork");}
+    int status = -1;
+    int fd = open(outputfile, O_WRONLY | O_TRUNC | O_CREAT, 0644);
+    if (fd==-1){perror("fork"); abort();}
 
-    execv(command[0], command);
-    exit (-1);
+    pid = fork();
+    
+    if (pid==-1){perror("fork"); abort();}
+    if (pid==0){
+        if (dup2(fd, 1) < 0)
+        {
+            abort();
+        }
+        close(fd);
+        execvp(command[0], command);
+        exit(1);
+    }
+
+    else{
+        close(fd);
+        wait(&status);
+    }
+
+    return true;
 
 /*
  * TODO
