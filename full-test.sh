@@ -46,7 +46,7 @@ if [ -f assignment.txt ]; then
         exit 1
     fi
 else
-    echo "Missing conf/assignment.txt, no assignment to run"
+    echo "Missing assignment.txt, no assignment to run"
     exit 1
 fi
 exit ${unit_test_rc}
