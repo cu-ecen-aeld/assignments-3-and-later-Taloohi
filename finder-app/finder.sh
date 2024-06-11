@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # Date: 5/15/2024
 # Author: Talha Abdulaziz
 
