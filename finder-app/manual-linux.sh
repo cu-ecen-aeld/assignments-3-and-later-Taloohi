@@ -65,13 +65,13 @@ if [ ! -e ${OUTDIR}/linux-stable/arch/${ARCH}/boot/Image ]; then
 
     # TODO: Add your kernel build steps here
     # make config
-    # make defconfig
-    make ARCH=arm64 CROSS_COMPILE=$CROSS_COMPILE mrpoper
+    make defconfig
+    # make ARCH=arm64 CROSS_COMPILE=$CROSS_COMPILE mrpoper
     make ARCH=arm64 CROSS_COMPILE=$CROSS_COMPILE defconfig
 
     make -j4 ARCH=arm64 CROSS_COMPILE=$CROSS_COMPILE all
 
-    # make ARCH=arm64 CROSS_COMPILE=$CROSS_COMPILE dtbs
+    make ARCH=arm64 CROSS_COMPILE=$CROSS_COMPILE dtbs
 
 fi
 
@@ -129,6 +129,8 @@ cp ${SYSROOT}/lib/ld-linux-aarch64.so.1 lib
 cp ${SYSROOT}/lib64/libm.so.6 lib64
 cp ${SYSROOT}/lib64/libresolv.so.2 lib64
 cp ${SYSROOT}/lib64/libc.so.6 lib64
+cp /lib64/ld-linux-x86-64.so.2 lib64
+
 
 echo "DONE BUSYBOX"
 # make distclean
@@ -138,25 +140,33 @@ echo "DONE BUSYBOX"
 # TODO: Make device nodes
 sudo mknod -m 666 dev/null c 1 3
 sudo mknod -m 600 dev/console c 5 1
-sudo chown -R root:root *
+# sudo chown -R root:root *
 
 cd ~/cedu/git_projects/intro-linux-assignment-1/assignment-1-Taloohi/finder-app
 # TODO: Clean and build the writer utility
 make clean 
-sudo make
+make ARCH=arm64 CROSS_COMPILE=${CROSS_COMPILE}
 
 # TODO: Copy the finder related scripts and executables to the /home directory
 # on the target rootfs
-sudo cp writer ${OUTDIR}/rootfs/home
-sudo cp finder.sh conf/username.txt conf/assignment.txt finder-test.sh ${OUTDIR}/rootfs/home
-sudo cp autorun-qemu.sh ${OUTDIR}/rootfs/home
+# sudo cp writer ${OUTDIR}/rootfs/home
+# sudo mkdir -p ${OUTDIR}/rootfs/home/conf
+# sudo cp conf/username.txt conf/assignment.txt ${OUTDIR}/rootfs/home/conf
+# sudo cp finder.sh conf/username.txt conf/assignment.txt finder-test.sh ${OUTDIR}/rootfs/home
+# sudo cp autorun-qemu.sh ${OUTDIR}/rootfs/home
+
+cp writer writer.c writer.o finder.sh finder-test.sh autorun-qemu.sh ${OUTDIR}/rootfs/home
+mkdir -p ${OUTDIR}/rootfs/home/conf
+cp conf/username.txt conf/assignment.txt ${OUTDIR}/rootfs/home
+cp conf/username.txt conf/assignment.txt ${OUTDIR}/rootfs/home/conf
+
+
 # TODO: Chown the root directory
 cd ${OUTDIR}/rootfs
 sudo chown -R root:root *
 
 
-# TODO: Create initramfs.cpio.gz
+# TODO: Create initramfs.cpio.gz    
 cd ${OUTDIR}/rootfs
 find . | cpio -H newc -ov --owner root:root > ${OUTDIR}/initramfs.cpio
-cd ${OUTDIR}
-gzip -f initramfs.cpio
+gzip -f ${OUTDIR}/initramfs.cpio
